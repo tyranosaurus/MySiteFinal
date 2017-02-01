@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?><!-- sql 매핑 파일 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board">
+	<select id="selectByNo" resultType="boardvo" parameterType="long">  <!-- parameterType 얘네들 타입은 모두 소문자로 써준다. -->
+		select no, 
+			   title, 
+			   content, 
+			   count, 
+			   user_no as userNo, 
+			   group_no as groupNo, 
+			   order_no as orderNo, 
+			   depth 
+		from board 
+		where no = #{no}
+	</select>
+
+	<select id="selectList" resultType="boardvo"><!-- vo변수명과 DB의 칼럼명이 다르면 as를 이용하여 
+			VO의 이름과 일치시켜 준다. --> 
+
+		select b.no as no, 
+		       b.title as title, 
+		       u.name as name, 
+		       b.count as ccount, 
+		       date_format(b.reg_date, '%Y-%m-%d %h:%i:%s') as regDate, 
+		       b.user_no as userNo, 
+		       b.group_no as groupNo, 
+		       b.order_no as orderNo, 
+		       b.depth as depth 
+		from board b, 
+			 user u 
+		where b.user_no = u.no 
+		order by b.group_no desc, b.order_no asc
+
+	</select>
+	
+	<select id="selectList2" resultType="boardvo" parameterType="map"><!-- vo변수명과 DB의 칼럼명이 다르면 as를 이용하여 
+			VO의 이름과 일치시켜 준다. --> 
+
+		select b.no as no, 
+			   b.title as title, 
+			   u.name as name, 
+			   b.count as count, 
+			   date_format(b.reg_date, '%Y-%m-%d %h:%i:%s ') regDate, 
+			   b.user_no as userNo, 
+			   b.group_no as groupNo, 
+			   b.order_no as orderNo, 
+			   b.depth as depth
+		from board b, 
+		     user u 
+		where b.user_no = u.no 
+		order by b.group_no desc, b.order_no asc 
+		limit #{limitFirst}, #{listNum}
+
+	</select>
+	
+	<select id="selectList3" resultType="boardvo" parameterType="map"><!-- vo변수명과 DB의 칼럼명이 다르면 as를 이용하여 
+			VO의 이름과 일치시켜 준다. --> 
+			<![CDATA[
+			select 
+				b.no as no, 
+				b.title as title,
+				u.name as name, 
+				b.count as count, 
+				date_format(b.reg_date, '%Y-%m-%d %h:%i:%s') as regDate, 
+				b.user_no as userNo, 
+				b.group_no as groupNo, 
+				b.order_no as orderNo, 
+				b.depth as depth
+			from board b, 
+				 user u 
+			where b.user_no = u.no and (title like '%${kwd}%' or content like '%${kwd}%')
+			order by b.group_no desc, 
+					 b.order_no asc 
+			limit ${limitFirst}, ${listNum}
+			]]>
+		
+	</select>
+	
+	<select id="selectList4" resultType="boardvo" parameterType="map"><!-- vo변수명과 DB의 칼럼명이 다르면 as를 이용하여 
+			VO의 이름과 일치시켜 준다. --> 
+		select b.no as no, 
+		       b.title as title, 
+		       u.name as name, 
+		       b.count as count, 
+		       b.reg_date as regDate, 
+		       b.depth as depth 
+		from board b, 
+		     user u 
+		where b.user_no = u.no and (title like '%${kwd}%' or content like '%${kwd}%') 
+		order by b.group_no desc, b.order_no asc
+		
+	</select>
+	
+	
+	<insert id="insert"  parameterType="map"> <!-- 인자로 넘겨주는 놈의 타입 -->
+		<![CDATA[
+			insert into board values(null, #{title}, #{content}, now(), 0, (select ifnull(max(group_no), 0) + 1 from board as b), 1, 0, #{no})
+		]]>
+		<!-- 인자로 받은 vo의 name, message, password를 #{}안에 넣어준다. -->
+		<selectKey keyProperty="no" resultType="long" order="AFTER">
+			select last_insert_id() <!-- selectKey에서는 인서트한 데이터의 no를 뽑아 이 쿼리의 결과가 insert의 
+				vo객체에 프라이머리키로 들어간다. -->
+		</selectKey>  <!-- 얘는 키값만 골라낼 수 있다. 키값(프라이머리)만 뽑아서 보내준다. -->
+
+	</insert>
+	
+	
+	<delete id="delete" parameterType="long"> <!-- parameterType은 객체 하나만 받을 수 있다. -->
+		delete from board where no = #{no}
+	</delete>
+	
+	
+	
+	<update id="countupdate" parameterType="map">
+		update board set count = #{count} where no = #{no} 
+	</update>
+	
+	
+	
+	<update id="modifyupdate" parameterType="map">
+		update board set title = #{title}, content = #{content} where no = #{no} 
+	</update>
+	
+	
+	
+	<insert id="insertreply" parameterType="map"> <!-- 인자로 넘겨주는 놈의 타입 -->
+		<![CDATA[
+			insert into board values(null, #{title}, #{content}, now(), 0, #{groupNo}, #{orderNo}, #{depth}, #{userNo})
+		]]>
+		<!-- 인자로 받은 vo의 name, message, password를 #{}안에 넣어준다. -->
+		<selectKey keyProperty="no" resultType="long" order="AFTER">
+			select last_insert_id() <!-- selectKey에서는 인서트한 데이터의 no를 뽑아 이 쿼리의 결과가 insert의 
+				vo객체에 프라이머리키로 들어간다. -->
+		</selectKey>  <!-- 얘는 키값만 골라낼 수 있다. 키값(프라이머리)만 뽑아서 보내준다. -->
+	</insert>
+
+
+	<update id="noupdate" parameterType="map">   
+		<![CDATA[
+			update board set order_no = (order_no + 1) where group_no = #{groupNo} and order_no >= #{orderNo} and no != (select * from (select max(no) from board) as b)
+		]]>
+	</update>
+
+</mapper>

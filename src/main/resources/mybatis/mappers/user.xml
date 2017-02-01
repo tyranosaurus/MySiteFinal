@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?> <!-- sql 매핑 파일 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="user">
+	<select id="selectByEmail" resultType="uservo" parameterType="string">  <!-- parameterType 얘네들 타입은 모두 소문자로 써준다. -->
+		select no,
+		email
+		From user
+		Where email=#{email}
+	</select>
+
+	<select id="selectAuth" resultType="uservo" parameterType="uservo">
+		select no,
+		name,
+		email
+		from user
+		where email = #{email} and passwd=password(#{password})
+	</select>
+
+	<select id="selectPlusGender" resultType="uservo" parameterType="long">
+		select no,
+		name,
+		email,
+		gender
+		from user
+		where no = #{no}
+	</select>
+
+	<insert id="insert" parameterType="uservo"> <!-- 인자로 넘겨주는 놈의 타입 -->
+		<![CDATA[
+			insert into user values(null, #{name}, #{email}, password(#{password}), #{gender})
+		]]>
+		<!-- 인자로 받은 vo의 name, message, password를 #{}안에 넣어준다. -->
+		<selectKey keyProperty="no" resultType="long" order="AFTER">
+			select last_insert_id() <!-- selectKey에서는 인서트한 데이터의 no를 뽑아 이 쿼리의 결과가 insert의 
+				vo객체에 프라이머리키로 들어간다. -->
+		</selectKey>  <!-- 얘는 키값만 골라낼 수 있다. 키값(프라이머리)만 뽑아서 보내준다. -->
+
+	</insert>
+	
+	<update id="modify" parameterType="uservo">
+		update user 
+		set name = #{name}, 
+		    passwd = password(#{password}), 
+		    gender = #{gender} 
+		where no = #{no}
+	</update>
+
+
+
+
+
+</mapper>

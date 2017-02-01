@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns="http://www.springframework.org/schema/beans"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd"
+	xmlns:mvc="http://www.springframework.org/schema/mvc">
+
+	<!-- validator, conversionService, messageConverter를 자동으로 등록 -->
+	<mvc:annotation-driven>  <!-- 리스폰스바디를 다루는애 -->
+
+		<mvc:message-converters>
+
+			<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>text/html; charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+
+			<bean
+				class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>application/json; charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+
+		</mvc:message-converters>
+
+		<!-- argument resolver @AuthUser 적용하기위해 등록시킨다. -->
+		<mvc:argument-resolvers>
+			<bean
+				class="com.estsoft.mysite.resolver.AuthUserHandlerMethodArgumentResolver" />
+		</mvc:argument-resolvers>
+
+	</mvc:annotation-driven>
+
+
+	<!-- 서블릿 컨테이너의 디폴트 서블릿 위임 핸들러 -->
+	<mvc:default-servlet-handler />
+
+	<context:annotation-config />
+	<context:component-scan base-package="com.estsoft.mysite.controller" />  <!-- 패키지 이름을 설정해줌 -->
+	<!-- 참고, 이 xml의 이름은 약속된것. <servlet-name>dispatcher</servlet-name> 여기 이름 
+		따라 이름~~ -servlet으로 만들어야함 -->
+	<!-- 디스패처 서플릿이 만드는 컨테이너에서 빈을 만들때 쓴다. -->
+
+	<!-- 기본 뷰 리졸버 -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">  <!--InternalResourceViewResolver이게 없으면 디폴트 리졸버가 들어간다. -->
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="/WEB-INF/views/" />  <!-- jsp파일 경로 설정할때 앞에붙는거 설정 -->
+		<property name="suffix" value=".jsp" /> <!-- jsp파일 확장자 설정 -->
+		<property name="order" value="1" />
+	</bean>
+
+	<!-- MyInterceptor Interceptors -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/board/**" />
+			<bean class="com.estsoft.mysite.interceptor.MyInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+	<!-- MyInterceptor2 Interceptors -->
+	<!-- <mvc:interceptors> <mvc:interceptor> <mvc:mapping path="/guestbook/**" 
+		/> <bean class="com.estsoft.mysite.interceptor.MyInterceptor2" /> </mvc:interceptor> 
+		</mvc:interceptors> -->
+
+	<!-- 로그인 처리해주는 Interceptors -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/user/login" />
+			<bean class="com.estsoft.mysite.interceptor.AuthLoginInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+	<!-- 로그아웃 처리해주는 Interceptors -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/user/logout" />
+			<bean class="com.estsoft.mysite.interceptor.AuthLogoutInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+	<!-- ???auth랑 관계가 있긴한거 같은데 잘 모름 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" /> <!-- /가 있는 모든 url에 AuthInterceptor를 실행시킨다는 뜻 -->
+			<mvc:exclude-mapping path="/assets/**" />  <!-- 이렇게 들어오는 경로는 제외하라는 뜻 -->
+			<bean class="com.estsoft.mysite.interceptor.AuthInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+	<!-- 6. MessageSource -->
+	<bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>messages/messages_ko</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- AOP auto Proxy 설정 -->
+	<aop:aspectj-autoproxy />
+</beans>
